@@ -6,21 +6,63 @@
     ul { list-style-type: none; padding-left: 1em; }
     li { margin: 2px 0; }
     button { margin-top: 10px; padding: 6px 12px; }
+    .options { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h3>Layer Structure</h3>
-  <div id="tree"></div>
-  <button id="downloadBtn">Download JSON</button>
+  <h3>Layer Structure Exporter</h3>
+
+  <div class="options">
+    <h4>Include metadata:</h4>
+    <label><input type="checkbox" id="boundingBox"> Bounding box</label><br>
+    <label><input type="checkbox" id="fills"> Fill colors</label><br>
+    <label><input type="checkbox" id="strokes"> Strokes</label><br>
+    <label><input type="checkbox" id="opacity"> Opacity</label><br>
+    <label><input type="checkbox" id="cornerRadius"> Corner radius</label><br>
+    <label><input type="checkbox" id="font"> Font details</label><br>
+    <label><input type="checkbox" id="text" checked> Text content</label><br>
+    <label><input type="checkbox" id="id"> Node ID</label><br>
+    <label><input type="checkbox" id="visible"> Visibility</label><br>
+  </div>
+
+  <button id="generateBtn">Generate Structure</button>
+  <button id="downloadBtn" disabled>Download JSON</button>
+
+  <div id="tree" style="margin-top:10px;"></div>
 
   <script>
     let currentData = null;
+
+    function getOptions() {
+      return {
+        boundingBox: document.getElementById('boundingBox').checked,
+        fills: document.getElementById('fills').checked,
+        strokes: document.getElementById('strokes').checked,
+        opacity: document.getElementById('opacity').checked,
+        cornerRadius: document.getElementById('cornerRadius').checked,
+        font: document.getElementById('font').checked,
+        text: document.getElementById('text').checked,
+        id: document.getElementById('id').checked,
+        visible: document.getElementById('visible').checked
+      };
+    }
+
+    document.getElementById('generateBtn').onclick = () => {
+      const options = getOptions();
+      parent.postMessage({ pluginMessage: { type: 'generate', options } }, '*');
+    };
+
+    document.getElementById('downloadBtn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'export-json', data: currentData } }, '*');
+    };
 
     onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (msg.type === 'structure') {
         currentData = msg.data;
+        document.getElementById('tree').innerHTML = '';
         document.getElementById('tree').appendChild(renderNode(msg.data));
+        document.getElementById('downloadBtn').disabled = false;
       } else if (msg.type === 'download') {
         const blob = new Blob([msg.blob], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -34,7 +76,7 @@
 
     function renderNode(node) {
       const li = document.createElement('li');
-      li.textContent = `${node.name} (${node.type}${node.text ? ': ' + node.text.slice(0, 40) + (node.text.length > 40 ? '…' : '') : ''})`;
+      li.textContent = `${node.name} (${node.type})`;
       if (node.children && node.children.length > 0) {
         const ul = document.createElement('ul');
         node.children.forEach(child => ul.appendChild(renderNode(child)));
@@ -42,10 +84,6 @@
       }
       return li;
     }
-
-    document.getElementById('downloadBtn').onclick = () => {
-      parent.postMessage({ pluginMessage: { type: 'export-json', data: currentData } }, '*');
-    };
   </script>
 </body>
 </html>
