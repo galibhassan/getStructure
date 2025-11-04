@@ -24,6 +24,10 @@ A Figma plugin that extracts the hierarchical **structure of all layers, groups,
 
 ---
 
+## Screenshot
+![Figma Layer Structure Explorer](./screenshots/Figma%20Layer%20structure%20explorer%20.png "Optional Title")
+
+
 ## 🖼️ Example Output
 
 ```json
