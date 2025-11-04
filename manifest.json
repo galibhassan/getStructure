@@ -1,6 +1,6 @@
 {
-  "name": "getStructure",
-  "id": "1567404173605770890",
+  "name": "Layer Structure Explorer",
+  "id": "layer-structure-explorer",
   "api": "1.0.0",
   "main": "code.js",
   "capabilities": [],

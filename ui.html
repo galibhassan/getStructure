@@ -1,17 +1,51 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" type="number" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<script>
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; padding: 10px; }
+    ul { list-style-type: none; padding-left: 1em; }
+    li { margin: 2px 0; }
+    button { margin-top: 10px; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h3>Layer Structure</h3>
+  <div id="tree"></div>
+  <button id="downloadBtn">Download JSON</button>
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', count } }, '*')
-}
+  <script>
+    let currentData = null;
 
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'structure') {
+        currentData = msg.data;
+        document.getElementById('tree').appendChild(renderNode(msg.data));
+      } else if (msg.type === 'download') {
+        const blob = new Blob([msg.blob], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'layer-structure.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    };
 
-</script>
+    function renderNode(node) {
+      const li = document.createElement('li');
+      li.textContent = `${node.name} (${node.type}${node.text ? ': ' + node.text.slice(0, 40) + (node.text.length > 40 ? '…' : '') : ''})`;
+      if (node.children && node.children.length > 0) {
+        const ul = document.createElement('ul');
+        node.children.forEach(child => ul.appendChild(renderNode(child)));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    document.getElementById('downloadBtn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'export-json', data: currentData } }, '*');
+    };
+  </script>
+</body>
+</html>
